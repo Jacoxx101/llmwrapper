@@ -1,22 +1,19 @@
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json ./
-COPY package-lock.json ./
-
-# Verify files exist and install dependencies
-RUN ls -la && cat package.json | head -5 && npm install --only=production
+# Copy and install dependencies
+COPY package*.json ./
+RUN npm install --production
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application  
 RUN npm run build
 
 # Expose port
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "run", "start"]
+CMD ["npm", "start"]
