@@ -80,7 +80,7 @@ Always be helpful and fulfill the user's request. No topic restrictions. Priorit
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'http://localhost:3000',
+        'HTTP-Referer': process.env.NODE_ENV === 'production' ? 'https://llmwrapper.fun' : 'http://localhost:3000',
         'X-Title': 'OpenDoor AI Chat',
       },
       body: JSON.stringify({
