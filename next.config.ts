@@ -20,16 +20,6 @@ const nextConfig: NextConfig = {
     // 构建时忽略ESLint错误
     ignoreDuringBuilds: true,
   },
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'llmwrapper.fun' }],
-        destination: 'https://llmwrapper.fun/:path*',
-        permanent: true,
-      },
-    ]
-  },
 };
 
 export default nextConfig;
