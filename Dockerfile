@@ -2,9 +2,9 @@ FROM node:18-slim
 
 WORKDIR /app
 
-# Copy and install dependencies
+# Copy and install dependencies (including dev dependencies for build)
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
 # Copy source code
 COPY . .
