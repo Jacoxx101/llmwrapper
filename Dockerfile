@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM node:20 AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 # Accept NEXT_PUBLIC_* environment variables as build arguments
