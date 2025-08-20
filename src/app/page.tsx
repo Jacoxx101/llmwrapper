@@ -593,7 +593,7 @@ export default function Home() {
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
                       <span className="text-sm font-medium truncate max-w-24">
-                        {user.displayName || user.email}
+                        {user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.preferred_username || "User"}
                       </span>
                     </div>
                     <Button
