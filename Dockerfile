@@ -1,5 +1,5 @@
 # ---------- Builder ----------
-FROM node:20-bookworm-slim AS builder
+FROM node:lts-slim AS builder
 WORKDIR /app
 
 # Railway injects NEXT_PUBLIC_SUPABASE_* during build
@@ -17,7 +17,7 @@ COPY . .
 RUN npx next telemetry disable && npm run build
 
 # ---------- Runner ----------
-FROM node:20-bookworm-slim AS runner
+FROM node:lts-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
