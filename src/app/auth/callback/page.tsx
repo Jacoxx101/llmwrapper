@@ -1,9 +1,9 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/utils/supabase/client";
 
-export default function Callback() {
+function CallbackHandler() {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -32,5 +32,17 @@ export default function Callback() {
     <div className="flex items-center justify-center min-h-screen bg-chat-bg">
       <p className="px-4 py-6 text-sm text-zinc-400">Signing you in…</p>
     </div>
+  );
+}
+
+export default function Callback() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-chat-bg">
+        <p className="px-4 py-6 text-sm text-zinc-400">Loading…</p>
+      </div>
+    }>
+      <CallbackHandler />
+    </Suspense>
   );
 }
