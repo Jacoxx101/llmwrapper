@@ -34,14 +34,26 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Install tsx for running TypeScript server
+RUN npm install -g tsx
+
 # Set production environment
 ENV NODE_ENV=production
+ENV PORT=3000
 
-# Copy built application from builder stage
-COPY --from=builder /app ./
+# Copy package files and install production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy built Next.js application and source files
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/server.ts ./server.ts
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 # Expose port
 EXPOSE 3000
 
-# Start the application
+# Start the custom server
 CMD ["npm", "start"]
