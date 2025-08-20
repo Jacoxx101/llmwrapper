@@ -14,10 +14,11 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { useTheme } from 'next-themes'
 import { MessageSquare, Menu, Plus, Search, MoreVertical, Settings, X, Key, Upload, File, Image, LogOut, User } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/SupabaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import FirebaseProbe from '@/components/FirebaseProbe'
+import SupabaseProbe from '@/components/SupabaseProbe'
 
 // Available models for each provider
 const AVAILABLE_MODELS = {
@@ -632,9 +633,10 @@ export default function Home() {
                   <span className="pro-badge">PRO</span>
                 </div>
                 
-                {/* Firebase Debug Probe */}
-                <div className="mb-8 w-full max-w-lg">
+                {/* Auth Debug Probes */}
+                <div className="mb-8 w-full max-w-2xl space-y-4">
                   <FirebaseProbe />
+                  <SupabaseProbe />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-2xl">
