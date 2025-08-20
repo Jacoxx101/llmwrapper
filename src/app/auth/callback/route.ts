@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -9,7 +10,8 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     try {
-      const supabase = getSupabaseClient()
+      const cookieStore = cookies()
+      const supabase = createClient(cookieStore)
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (!error) {
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
       console.error('Supabase Auth Error:', error.message)
       return NextResponse.redirect(`${origin}/auth/error`)
     } catch (error) {
-      console.error('Supabase client error:', error)
+      console.error('Supabase auth callback error:', error)
       return NextResponse.redirect(`${origin}/auth/error`)
     }
   }
