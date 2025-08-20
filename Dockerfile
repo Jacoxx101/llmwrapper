@@ -20,8 +20,9 @@ ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SEN
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 
-# Copy and install dependencies (including dev dependencies for build)
+# Copy package files and install dependencies
 COPY package*.json ./
+COPY package-lock.json ./
 RUN npm ci
 
 # Copy source code
