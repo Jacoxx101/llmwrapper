@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -28,36 +28,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
+    if (!isSupabaseConfigured) {
       setLoading(false)
       return
     }
 
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const supabase = getSupabaseClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+        setLoading(false)
+      } catch (error) {
+        console.error('Supabase client error:', error)
+        setLoading(false)
+      }
     }
 
     getInitialSession()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
+    let subscription: any = null
+    try {
+      const supabase = getSupabaseClient()
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      )
+      subscription = data
+    } catch (error) {
+      console.error('Supabase client error:', error)
+      setLoading(false)
+    }
 
-    return () => subscription.unsubscribe()
+    return () => subscription?.subscription?.unsubscribe()
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    if (!isSupabaseConfigured || !supabase) {
+    if (!isSupabaseConfigured) {
       throw new Error('Supabase is not configured. Please set up your Supabase credentials.')
     }
 
+    const supabase = getSupabaseClient()
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -69,10 +84,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!isSupabaseConfigured || !supabase) {
+    if (!isSupabaseConfigured) {
       throw new Error('Supabase is not configured. Please set up your Supabase credentials.')
     }
 
+    const supabase = getSupabaseClient()
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -89,10 +105,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signInWithGoogle = async () => {
-    if (!isSupabaseConfigured || !supabase) {
+    if (!isSupabaseConfigured) {
       throw new Error('Supabase is not configured. Please set up your Supabase credentials.')
     }
 
+    const supabase = getSupabaseClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -106,10 +123,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = async () => {
-    if (!isSupabaseConfigured || !supabase) {
+    if (!isSupabaseConfigured) {
       throw new Error('Supabase is not configured. Please set up your Supabase credentials.')
     }
 
+    const supabase = getSupabaseClient()
     const { error } = await supabase.auth.signOut()
     if (error) {
       throw error

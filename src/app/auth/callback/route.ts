@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseClient } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -7,19 +7,23 @@ export async function GET(request: NextRequest) {
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/'
 
-  // Only create supabase client at runtime, not during build
-  if (code && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
-    
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+  if (code) {
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      
+      if (!error) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+      
+      console.error('Supabase Auth Error:', error.message)
+      return NextResponse.redirect(`${origin}/auth/error`)
+    } catch (error) {
+      console.error('Supabase client error:', error)
+      return NextResponse.redirect(`${origin}/auth/error`)
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  // return the user to the home page if no code
+  return NextResponse.redirect(`${origin}/`)
 }
