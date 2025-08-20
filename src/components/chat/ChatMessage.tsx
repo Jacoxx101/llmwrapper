@@ -12,7 +12,7 @@ export default function ChatMessage({ role, content }: Message) {
   return (
     <div
       className={clsx(
-        "w-full border rounded-xl px-4 py-3",
+        "w-full border rounded-xl px-4 py-3 overflow-visible",
         "border-chat-border",
         isAssistant ? "bg-chat-panel" : "bg-chat-user"
       )}

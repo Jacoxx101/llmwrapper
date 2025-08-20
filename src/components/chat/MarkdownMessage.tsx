@@ -18,9 +18,16 @@ export default function MarkdownMessage({ content }: Props) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
         components={{
+          table({ children }) {
+            return (
+              <div className="w-full overflow-x-auto">
+                <table className="min-w-full">{children}</table>
+              </div>
+            )
+          },
           pre({ children }) {
             return (
-              <div className="relative group">
+              <div className="relative group w-full overflow-x-auto">
                 <button
                   onClick={() => {
                     const text = (children as any)?.props?.children?.[0] ?? ""
@@ -30,7 +37,7 @@ export default function MarkdownMessage({ content }: Props) {
                 >
                   Copy
                 </button>
-                <pre>{children}</pre>
+                <pre className="!bg-[#0f1116] !border !border-[#2a2d36] rounded-md">{children}</pre>
               </div>
             )
           },

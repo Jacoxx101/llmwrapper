@@ -595,8 +595,9 @@ hr {
   background: #0f1116 !important;
   border: 1px solid #262933;
   border-radius: .6rem;
-  padding-top: 2.25rem; /* room for copy button bar */
+  padding-top: 2.2rem; /* room for copy button bar */
   position: relative;
+  overflow-x: auto;
 }
 
 .hljs { 

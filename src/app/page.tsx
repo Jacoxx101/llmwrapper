@@ -628,10 +628,10 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Chat Container */}
-        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto py-4">
+        {/* Chat Container - Grid Layout for proper scrolling */}
+        <div className="flex-1 grid grid-rows-[1fr,auto] max-w-4xl mx-auto w-full">
+          {/* Messages - The ONLY scroll area */}
+          <div className="overflow-y-auto px-4 py-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="flex items-center mb-8">
@@ -686,8 +686,8 @@ export default function Home() {
             )}
           </div>
 
-          {/* Input Area */}
-          <div className="border-t border-border p-4">
+          {/* Input Area - Grid Footer */}
+          <div className="border-t border-chat-border bg-chat-bg p-4">
             {/* Uploaded Files */}
             {uploadedFiles.length > 0 && (
               <div className="mb-3 p-3 bg-muted rounded-lg">
