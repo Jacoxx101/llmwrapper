@@ -22,8 +22,7 @@ ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 
 # Copy package files and install dependencies
 COPY package*.json ./
-COPY package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
