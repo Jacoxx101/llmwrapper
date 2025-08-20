@@ -25,8 +25,8 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV npm_config_build_from_source=false
 
 # Copy package files and install dependencies with memory optimizations
-COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund --omit=optional
+COPY package*.json ./
+RUN npm install --no-audit --no-fund --omit=optional
 
 # Copy source code
 COPY . .
