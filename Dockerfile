@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM node:20-slim AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Accept NEXT_PUBLIC_* environment variables as build arguments
@@ -20,9 +20,13 @@ ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SEN
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 ENV NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
+# Skip heavy optional downloads to save memory
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV npm_config_build_from_source=false
+
+# Copy package files and install dependencies with memory optimizations
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund --omit=optional
 
 # Copy source code
 COPY . .
@@ -41,11 +45,11 @@ RUN npm install -g tsx
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy package files and install production dependencies
-COPY package*.json ./
-RUN npm ci --only=production
+# Copy package files and install only production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --only=production --no-audit --no-fund
 
-# Copy built Next.js application and source files
+# Copy built Next.js application and required source files
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/server.ts ./server.ts
