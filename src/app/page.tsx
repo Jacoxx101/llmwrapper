@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChatStore } from '@/store/chat-store'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
+import ChatMessage from '@/components/chat/ChatMessage'
+import TypingDots from '@/components/chat/TypingDots'
 import { formatDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -342,7 +344,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-chat-bg text-zinc-100">
       {/* API Key Modal */}
       <Dialog open={showApiModal} onOpenChange={setShowApiModal}>
         <DialogContent className="sm:max-w-md">
@@ -534,7 +536,13 @@ export default function Home() {
               </Button>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center">
-                  <span className="text-2xl font-bold text-foreground">llmwrapper</span>
+                  <Button
+                    variant="ghost"
+                    className="text-2xl font-bold text-foreground p-0 h-auto hover:bg-transparent"
+                    onClick={handleNewChat}
+                  >
+                    llmwrapper
+                  </Button>
                 </div>
               </div>
             </div>
@@ -651,55 +659,24 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                {messages.map((message, index) => (
-                  <div
+              <div className="space-y-3">
+                {messages.map((message) => (
+                  <ChatMessage
                     key={message.id}
-                    className={`flex gap-4 py-4 ${index > 0 ? 'border-t border-border/30' : ''} ${
-                      message.role === 'assistant' ? 'bg-muted/20' : ''
-                    }`}
-                  >
-                    <div className="flex-shrink-0">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                        message.role === 'user' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-emerald-600 text-white'
-                      }`}>
-                        {message.role === 'user' ? 'U' : 'AI'}
-                      </div>
-                    </div>
-                    <div className="flex-1 max-w-none">
-                      <div className={`${
-                        message.role === 'user' 
-                          ? 'inline-block px-4 py-2 rounded-2xl bg-primary text-primary-foreground max-w-lg' 
-                          : 'w-full'
-                      }`}>
-                        {message.role === 'assistant' ? (
-                          <div className="markdown-content">
-                            <MarkdownRenderer content={message.content} />
-                          </div>
-                        ) : (
-                          <div className="whitespace-pre-wrap text-[15px] font-normal leading-normal">{message.content}</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    id={message.id}
+                    role={message.role}
+                    content={message.content}
+                  />
                 ))}
                 
-                {/* Loading indicator */}
+                {/* Loading indicator - ChatGPT style */}
                 {isLoading && (
-                  <div className="flex gap-4 py-4 bg-muted/20">
-                    <div className="flex-shrink-0">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium bg-emerald-600 text-white">
+                  <div className="w-full rounded-xl border border-chat-border bg-chat-panel px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600/90 text-[11px] font-semibold">
                         AI
                       </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex space-x-1 items-center">
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
+                      <TypingDots />
                     </div>
                   </div>
                 )}

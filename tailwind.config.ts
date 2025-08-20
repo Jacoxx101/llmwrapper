@@ -50,6 +50,12 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			chat: {
+  				bg: "#0e0f13",
+  				panel: "#15171c",
+  				user: "#1e2027",
+  				border: "#2a2d36"
   			}
   		},
   		borderRadius: {
@@ -59,6 +65,6 @@ const config: Config = {
   		}
   	}
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [tailwindcssAnimate, require("@tailwindcss/typography")],
 };
 export default config;
