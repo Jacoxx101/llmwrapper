@@ -1,55 +1,59 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
-import { getAuth, Auth } from 'firebase/auth'
-import { getFirestore, Firestore } from 'firebase/firestore'
-import { getAnalytics, Analytics, isSupported } from 'firebase/analytics'
+import { getApps, initializeApp, getApp, type FirebaseApp } from 'firebase/app'
+import { getAuth, type Auth } from 'firebase/auth'
+import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
+import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics'
 
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBgZVm5wvAYSwc3RWhyBJ1KjYqhdmM2paw",
-  authDomain: "opendoor-654d1.firebaseapp.com",
-  projectId: "opendoor-654d1",
-  storageBucket: "opendoor-654d1.firebasestorage.app",
-  messagingSenderId: "23158182272",
-  appId: "1:23158182272:web:478b8ced934048cc5af165",
-  measurementId: "G-98QK1SMGWX"
-}
-
-// Firebase is now always configured
-export const isFirebaseConfigured = true
-
-let app: FirebaseApp | null = null
-let auth: Auth | null = null
-let db: Firestore | null = null
+let app: FirebaseApp
+let auth: Auth
+let db: Firestore
+let storage: FirebaseStorage
 let analytics: Analytics | null = null
 
-// Initialize Firebase for client-side usage
 export function initializeFirebaseClient() {
-  if (typeof window !== 'undefined' && !app) {
-    try {
-      app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-      
-      if (app) {
-        auth = getAuth(app)
-        db = getFirestore(app)
-        
-        // Initialize Analytics (only in browser environment)
-        isSupported().then((supported) => {
-          if (supported && app) {
-            analytics = getAnalytics(app)
-          }
-        }).catch(console.warn)
-      }
-    } catch (error) {
-      console.error('Firebase client initialization error:', error)
-    }
+  if (typeof window === 'undefined') {
+    return { app: null, auth: null, db: null, storage: null, analytics: null }
   }
-  return { app, auth, db, analytics }
+
+  if (!getApps().length) {
+    const firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+    }
+
+    app = initializeApp(firebaseConfig)
+  } else {
+    app = getApp()
+  }
+
+  auth = getAuth(app)
+  db = getFirestore(app)
+  storage = getStorage(app)
+
+  // Initialize Analytics only in browser environment
+  if (typeof window !== 'undefined') {
+    isSupported().then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app)
+      }
+    }).catch(() => {
+      // Analytics not supported, ignore
+    })
+  }
+
+  return { app, auth, db, storage, analytics }
 }
 
-// Initialize Firebase immediately for client-side
-if (typeof window !== 'undefined') {
-  initializeFirebaseClient()
-}
+export const isFirebaseConfigured = !!(
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+)
 
-export { auth, db, analytics }
+export { auth, db, storage, analytics }
 export default app

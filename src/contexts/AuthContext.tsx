@@ -11,7 +11,7 @@ import {
   signInWithPopup,
   updateProfile
 } from 'firebase/auth'
-import { auth, isFirebaseConfigured, initializeFirebaseClient } from '@/lib/firebase'
+import { initializeFirebaseClient, isFirebaseConfigured } from '@/lib/firebase'
 
 interface AuthContextType {
   user: User | null
@@ -34,7 +34,8 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(isFirebaseConfigured)
+  const [loading, setLoading] = useState(true)
+  const [firebaseAuth, setFirebaseAuth] = useState<any>(null)
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -42,15 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return
     }
 
-    // Initialize Firebase client-side
-    const { auth: firebaseAuth } = initializeFirebaseClient()
-    
-    if (!firebaseAuth) {
+    const { auth } = initializeFirebaseClient()
+    if (!auth) {
       setLoading(false)
       return
     }
 
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
+    setFirebaseAuth(auth)
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
       setLoading(false)
     })
@@ -59,12 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !firebaseAuth) {
       throw new Error('Firebase is not configured. Please set up your Firebase credentials.')
-    }
-    const { auth: firebaseAuth } = initializeFirebaseClient()
-    if (!firebaseAuth) {
-      throw new Error('Firebase Auth is not available.')
     }
     try {
       await signInWithEmailAndPassword(firebaseAuth, email, password)
@@ -75,12 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !firebaseAuth) {
       throw new Error('Firebase is not configured. Please set up your Firebase credentials.')
-    }
-    const { auth: firebaseAuth } = initializeFirebaseClient()
-    if (!firebaseAuth) {
-      throw new Error('Firebase Auth is not available.')
     }
     try {
       const result = await createUserWithEmailAndPassword(firebaseAuth, email, password)
@@ -94,12 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signInWithGoogle = async () => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !firebaseAuth) {
       throw new Error('Firebase is not configured. Please set up your Firebase credentials.')
-    }
-    const { auth: firebaseAuth } = initializeFirebaseClient()
-    if (!firebaseAuth) {
-      throw new Error('Firebase Auth is not available.')
     }
     try {
       const provider = new GoogleAuthProvider()
@@ -111,12 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = async () => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !firebaseAuth) {
       throw new Error('Firebase is not configured. Please set up your Firebase credentials.')
-    }
-    const { auth: firebaseAuth } = initializeFirebaseClient()
-    if (!firebaseAuth) {
-      throw new Error('Firebase Auth is not available.')
     }
     try {
       await signOut(firebaseAuth)
