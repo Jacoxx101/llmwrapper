@@ -211,6 +211,13 @@ export default function Home() {
     clearMessages()
   }
 
+  // Handle go home
+  const handleGoHome = () => {
+    // Clear current chat and messages to show home page
+    setCurrentChatId(null)
+    clearMessages()
+  }
+
   // Handle chat selection
   const handleSelectChat = (chatId: string) => {
     loadChat(chatId)
@@ -344,7 +351,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-chat-bg text-zinc-100">
+    <div className="flex h-screen bg-background text-foreground">
       {/* API Key Modal */}
       <Dialog open={showApiModal} onOpenChange={setShowApiModal}>
         <DialogContent className="sm:max-w-md">
@@ -539,7 +546,7 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     className="text-2xl font-bold text-foreground p-0 h-auto hover:bg-transparent"
-                    onClick={handleNewChat}
+                    onClick={handleGoHome}
                   >
                     llmwrapper
                   </Button>
@@ -628,13 +635,13 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Chat Container - Grid Layout for proper scrolling */}
-        <div className="flex-1 grid grid-rows-[1fr,auto] max-w-4xl mx-auto w-full">
+        {/* Chat Container - Messages only */}
+        <div className="flex-1 overflow-hidden">
           {/* Messages - The ONLY scroll area */}
-          <div className="overflow-y-auto px-4 py-4">
+          <div className="h-full overflow-y-auto px-4 py-2 max-w-4xl mx-auto">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="flex items-center mb-8">
+                <div className="flex items-center mb-4">
                   <span className="text-3xl font-bold text-foreground">llmwrapper</span>
                   <span className="pro-badge">PRO</span>
                 </div>
@@ -685,9 +692,10 @@ export default function Home() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Input Area - Grid Footer */}
-          <div className="border-t border-chat-border bg-chat-bg p-4">
+        {/* Input Area - Fixed at bottom of screen */}
+        <div className="border-t border-chat-border bg-background p-4 w-full">
             {/* Uploaded Files */}
             {uploadedFiles.length > 0 && (
               <div className="mb-3 p-3 bg-muted rounded-lg">

@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '@/utils/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
 
 interface AuthContextType {
   user: User | null
@@ -26,6 +27,8 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
     // Get initial session
@@ -41,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     })
 
     return () => subscription.subscription.unsubscribe()
-  }, [])
+  }, [supabase])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -84,9 +87,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      throw error
+    try {
+      // Clear client state
+      await supabase.auth.signOut()
+      
+      // Navigate to signout route (no fetch, extension-proof)
+      window.location.href = '/auth/signout'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Fallback: still redirect even if client signout fails
+      window.location.href = '/auth/signout'
     }
   }
 
