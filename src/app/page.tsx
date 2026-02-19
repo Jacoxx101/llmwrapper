@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import ModelSelector from '@/components/ModelSelector'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -20,64 +21,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
-// Available models for each provider
-const AVAILABLE_MODELS = {
-  gemini: [
-    { value: 'gemini-pro', label: 'Gemini Pro (Stable)' },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-    { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Experimental)' },
-  ],
-  openrouter: [
-    { value: 'openai/gpt-4o', label: 'ChatGPT GPT-4o' },
-    { value: 'openai/gpt-4o-mini', label: 'ChatGPT GPT-4o Mini' },
-    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
-    { value: 'anthropic/claude-3-haiku', label: 'Claude 3 Haiku' },
-    { value: 'deepseek/deepseek-r1', label: 'DeepSeek R1' },
-    { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat' },
-    { value: 'moonshot/kimi-v1', label: 'Kimi K2' },
-    { value: 'google/gemini-pro-1.5', label: 'Gemini Pro 1.5 (via OpenRouter)' },
-    { value: 'sourceful/riverflow-v2-fast', label: 'Riverflow V2 Fast' },
-    { value: 'sourceful/riverflow-v2-standard-preview', label: 'Riverflow V2 Standard Preview' },
-    { value: 'sourceful/riverflow-v2-fast-preview', label: 'Riverflow V2 Fast Preview' },
-    { value: 'sourceful/riverflow-v2-max-preview', label: 'Riverflow V2 Max Preview' },
-    { value: 'black-forest-labs/flux.2-klein-4b', label: 'FLUX.2 Klein 4B' },
-    { value: 'black-forest-labs/flux.2-max', label: 'FLUX.2 Max' },
-    { value: 'black-forest-labs/flux.2-flex', label: 'FLUX.2 Flex' },
-    { value: 'black-forest-labs/flux.2-pro', label: 'FLUX.2 Pro' },
-    { value: 'arcee-ai/trinity-large-preview:free', label: 'Arcee Trinity Large Preview (Free)' },
-    { value: 'stepfun/step-3.5-flash:free', label: 'StepFun Step 3.5 Flash (Free)' },
-    { value: 'z-ai/glm-4.5-air:free', label: 'Z.ai GLM 4.5 Air (Free)' },
-    { value: 'deepseek/deepseek-r1-0528:free', label: 'DeepSeek R1 0528 (Free)' },
-    { value: 'openrouter/aurora-alpha', label: 'Aurora Alpha' },
-    { value: 'nvidia/nemotron-3-nano-30b-a3b:free', label: 'NVIDIA Nemotron 3 Nano (Free)' },
-    { value: 'qwen/qwen3-235b-a22b-thinking-2507', label: 'Qwen3 235B Thinking' },
-    { value: 'openai/gpt-oss-120b:free', label: 'OpenAI GPT-OSS 120B (Free)' },
-    { value: 'upstage/solar-pro-3:free', label: 'Solar Pro 3 (Free)' },
-    { value: 'arcee-ai/trinity-mini:free', label: 'Arcee Trinity Mini (Free)' },
-    { value: 'nvidia/nemotron-nano-9b-v2:free', label: 'NVIDIA Nemotron Nano 9B V2 (Free)' },
-    { value: 'nvidia/nemotron-nano-12b-v2-vl:free', label: 'NVIDIA Nemotron Nano 12B VL (Free)' },
-    { value: 'qwen/qwen3-vl-235b-a22b-thinking', label: 'Qwen3 VL 235B Thinking' },
-    { value: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B Instruct (Free)' },
-    { value: 'qwen/qwen3-vl-30b-a3b-thinking', label: 'Qwen3 VL 30B Thinking' },
-    { value: 'openai/gpt-oss-20b:free', label: 'OpenAI GPT-OSS 20B (Free)' },
-    { value: 'qwen/qwen3-coder:free', label: 'Qwen3 Coder 480B (Free)' },
-    { value: 'qwen/qwen3-next-80b-a3b-instruct:free', label: 'Qwen3 Next 80B Instruct (Free)' },
-    { value: 'bytedance-seed/seedream-4.5', label: 'ByteDance Seedream 4.5' },
-    { value: 'google/gemma-3-27b-it:free', label: 'Gemma 3 27B (Free)' },
-    { value: 'liquid/lfm-2.5-1.2b-thinking:free', label: 'Liquid LFM 2.5 1.2B Thinking (Free)' },
-    { value: 'liquid/lfm-2.5-1.2b-instruct:free', label: 'Liquid LFM 2.5 1.2B Instruct (Free)' },
-    { value: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', label: 'Venice Uncensored (Free)' },
-    { value: 'mistralai/mistral-small-3.1-24b-instruct:free', label: 'Mistral Small 3.1 24B (Free)' },
-    { value: 'google/gemma-3n-e4b-it:free', label: 'Gemma 3n 4B (Free)' },
-    { value: 'nousresearch/hermes-3-llama-3.1-405b:free', label: 'Hermes 3 405B Instruct (Free)' },
-    { value: 'google/gemma-3n-e2b-it:free', label: 'Gemma 3n 2B (Free)' },
-    { value: 'qwen/qwen3-4b:free', label: 'Qwen3 4B (Free)' },
-    { value: 'google/gemma-3-4b-it:free', label: 'Gemma 3 4B (Free)' },
-    { value: 'meta-llama/llama-3.2-3b-instruct:free', label: 'Llama 3.2 3B Instruct (Free)' },
-    { value: 'google/gemma-3-12b-it:free', label: 'Gemma 3 12B (Free)' },
-  ]
-}
+
 
 export default function Home() {
   const { user, logout } = useAuth()
@@ -578,31 +522,13 @@ export default function Home() {
             </button>
 
             <div className="flex items-center gap-2">
-              {/* Grouped model selector */}
-              <div className="hidden sm:flex items-center bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-                <Select value={selectedProvider} onValueChange={(value: 'gemini' | 'openrouter') => setSelectedProvider(value)}>
-                  <SelectTrigger className="w-28 h-[34px] text-xs border-0 bg-transparent shadow-none rounded-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gemini">Gemini</SelectItem>
-                    <SelectItem value="openrouter">OpenRouter</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="w-px h-5 bg-border" />
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="w-36 h-[34px] text-xs border-0 bg-transparent shadow-none rounded-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AVAILABLE_MODELS[selectedProvider].map((model) => (
-                      <SelectItem key={model.value} value={model.value}>
-                        {model.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Model selector */}
+              <ModelSelector
+                selectedModel={selectedModel}
+                selectedProvider={selectedProvider}
+                onModelChange={setSelectedModel}
+                onProviderChange={setSelectedProvider}
+              />
 
               <ThemeToggle />
 
