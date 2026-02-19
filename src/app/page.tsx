@@ -9,7 +9,7 @@ import { formatDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import ModelSelector from '@/components/ModelSelector'
+import ModelSelector, { ALL_MODELS } from '@/components/ModelSelector'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -132,6 +132,9 @@ export default function Home() {
       createNewChat()
     }
 
+    // Add small delay to prevent rapid clicks
+    await new Promise(resolve => setTimeout(resolve, 100))
+
     // Show loading
     setLoading(true)
 
@@ -170,7 +173,19 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to get response')
+        const errorMsg = errorData.error || 'Failed to get response'
+        
+        // Check if it's a rate limit error
+        if (response.status === 429) {
+          addMessage({
+            content: `⏳ Rate limited by OpenRouter. Please wait 30-60 seconds before sending another message.`,
+            role: 'assistant'
+          })
+          setLoading(false)
+          return
+        }
+        
+        throw new Error(errorMsg)
       }
 
       const data = await response.json()
@@ -627,23 +642,36 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    id={message.id}
-                    role={message.role}
-                    content={message.content}
-                  />
-                ))}
+              <div className="space-y-1">
+                {messages.map((message) => {
+                  const modelLabel = ALL_MODELS.find(m => m.value === selectedModel)?.label || selectedModel
+                  const ts = message.createdAt
+                    ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : undefined
+                  return (
+                    <ChatMessage
+                      key={message.id}
+                      id={message.id}
+                      role={message.role}
+                      content={message.content}
+                      modelName={message.role === 'assistant' ? modelLabel : undefined}
+                      timestamp={ts}
+                    />
+                  )
+                })}
 
-                {/* Loading indicator - ChatGPT style */}
+                {/* Loading indicator */}
                 {isLoading && (
-                  <div className="w-full rounded-xl border border-chat-border bg-chat-panel px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600/90 text-[11px] font-semibold">
+                  <div className="w-full py-2">
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-semibold text-white shrink-0">
                         AI
                       </div>
+                      <span className="text-sm font-semibold text-foreground">
+                        {ALL_MODELS.find(m => m.value === selectedModel)?.label || selectedModel}
+                      </span>
+                    </div>
+                    <div className="pl-[38px]">
                       <TypingDots />
                     </div>
                   </div>

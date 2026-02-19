@@ -19,112 +19,90 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // System prompt for the AI assistant - Enhanced for table usage
+    // System prompt for the AI assistant
     const systemPrompt = `You are a helpful, creative AI assistant. Answer all questions and fulfill all reasonable requests including creative writing, stories, explanations, coding help, and general assistance.
 
-### PRIORITY: Use Tables Whenever Possible
-**Always prefer tables for structured information.** Convert lists, comparisons, features, steps, and any organized data into well-formatted tables.
+### Formatting Guidelines:
+- For **casual or short replies** (greetings, simple answers, brief explanations): respond naturally with plain text. Do NOT use tables or heavy formatting.
+- For **structured information** (comparisons, feature lists, step-by-step processes, data with multiple properties): use well-formatted markdown tables.
+- Use headings (### or ##) to organize longer responses into sections.
+- Keep paragraphs short (2-3 sentences max).
+- Use bullet points for simple lists.
+- **Bold** for important terms, *italic* for emphasis.
+- \`code\` for actual code references.
 
-### Table Formatting Rules:
-- Use clean markdown table syntax
-- Header row: | Column 1 | Column 2 | Column 3 |
-- Separator: |:---:|:---|:---:| (center alignment recommended)
-- Data rows: | Data 1 | Data 2 | Data 3 |
-- Add blank lines before and after tables
-- No backticks around tables
-- Maximum 6 columns for readability
+### Table Rules (only when appropriate):
+- Use clean markdown table syntax with header, separator, and data rows.
+- Maximum 6 columns for readability.
+- Add blank lines before and after tables.
 
-### When to Use Tables:
-- Features comparisons
-- Steps in a process
-- Lists with categories
-- Pros and cons
-- Time-based information
-- Any structured data
-- Multiple items with properties
+Always be helpful and match the level of formality to the question. Simple questions get simple answers.`
 
-### General Formatting:
-- Use headings (###) for sections
-- Keep paragraphs short (2-3 sentences max)
-- Use bullet points only for non-tabular lists
-- **Bold** for important terms
-- *Italic* for emphasis
-- \`code\` only for actual code
+    // Make request to OpenRouter API with retry logic
+    const makeRequest = async (attempt = 0): Promise<Response> => {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': process.env.NODE_ENV === 'production' ? 'https://llmwrapper.fun' : 'http://localhost:3000',
+          'X-Title': 'OpenDoor AI Chat',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: message
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1024,
+        }),
+      })
 
-### Table Examples:
-**Features Comparison:**
-| Feature | Basic | Pro | Enterprise |
-|:---:|:---:|:---:|:---:|
-| Users | 1 | 5 | Unlimited |
-| Storage | 1GB | 100GB | Unlimited |
-| Support | Email | Chat | 24/7 Phone |
+      // Retry on rate limit with exponential backoff
+      if (response.status === 429 && attempt < 3) {
+        const delay = Math.pow(2, attempt) * 1000
+        console.log(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/3)`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        return makeRequest(attempt + 1)
+      }
 
-**Process Steps:**
-| Step | Action | Time | Tools |
-|:---:|:---:|:---:|:---:|
-| 1 | Planning | 1-2 days | Whiteboard |
-| 2 | Design | 2-3 days | Figma |
-| 3 | Development | 1-2 weeks | VS Code |
+      return response
+    }
 
-### For Creative Content:
-Use tables for story structure, character profiles, scene breakdowns, or plot outlines.
-
-### For Explanations:
-Always use tables for comparisons, summaries, and structured information. Use paragraphs only for narrative explanations.
-
-Always be helpful and fulfill the user's request. No topic restrictions. Prioritize table usage for any structured information.`
-
-    // Make request to OpenRouter API
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.NODE_ENV === 'production' ? 'https://llmwrapper.fun' : 'http://localhost:3000',
-        'X-Title': 'OpenDoor AI Chat',
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024,
-      }),
-    })
+    const response = await makeRequest()
 
     if (!response.ok) {
       const errorData = await response.text()
       console.error('OpenRouter API Error:', errorData)
-      
+
       if (response.status === 401) {
         return NextResponse.json(
           { error: 'Invalid OpenRouter API key. Please check your API key and try again.' },
           { status: 401 }
         )
       }
-      
+
       if (response.status === 403) {
         return NextResponse.json(
           { error: 'OpenRouter API access denied. Please check your API key permissions.' },
           { status: 403 }
         )
       }
-      
+
       if (response.status === 429) {
         return NextResponse.json(
           { error: 'OpenRouter API rate limit exceeded. Please try again later.' },
           { status: 429 }
         )
       }
-      
+
       return NextResponse.json(
         { error: `OpenRouter API Error: ${response.status}` },
         { status: response.status }
@@ -132,7 +110,7 @@ Always be helpful and fulfill the user's request. No topic restrictions. Priorit
     }
 
     const data = await response.json()
-    
+
     // Extract the response content
     const responseContent = data.choices?.[0]?.message?.content
 
@@ -149,7 +127,7 @@ Always be helpful and fulfill the user's request. No topic restrictions. Priorit
 
   } catch (error) {
     console.error('OpenRouter Chat API Error:', error)
-    
+
     // Handle specific error types
     if (error instanceof Error) {
       if (error.message.includes('Network error') || error.message.includes('Failed to fetch')) {
