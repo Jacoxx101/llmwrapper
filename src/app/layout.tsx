@@ -44,6 +44,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${dmSans.variable} antialiased bg-background text-foreground font-sans`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

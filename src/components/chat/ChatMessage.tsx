@@ -16,12 +16,12 @@ export default function ChatMessage({ role, content, modelName, timestamp }: Mes
   const isAssistant = role === "assistant"
 
   return (
-    <div className="w-full py-2">
+    <div className="w-full py-3">
       {/* Header row: avatar + label + timestamp */}
       <div className="flex items-center gap-2.5 mb-2">
         <div
           className={clsx(
-            "flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold shrink-0 text-white",
+            "flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-semibold shrink-0 text-white",
             isAssistant ? "bg-emerald-600" : "bg-sky-600"
           )}
           aria-hidden
@@ -40,7 +40,7 @@ export default function ChatMessage({ role, content, modelName, timestamp }: Mes
       </div>
 
       {/* Content */}
-      <div className={clsx("pl-[38px]", isAssistant && "ai-response-content")}>
+      <div className={clsx("pl-[42px]", isAssistant && "ai-response-content")}>
         {isAssistant ? (
           <MarkdownMessage content={content} />
         ) : (
