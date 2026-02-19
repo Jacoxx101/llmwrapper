@@ -1,8 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { User } from '@supabase/supabase-js'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 
 interface AuthContextType {
@@ -24,13 +24,24 @@ export const useAuth = () => {
   return context
 }
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(isSupabaseConfigured)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+
+  // Only create the Supabase client when env vars are available (not during build prerender)
+  const supabase = useMemo(() => {
+    if (!isSupabaseConfigured) return null
+    return createBrowserClient(supabaseUrl!, supabaseAnonKey!)
+  }, [])
 
   useEffect(() => {
+    if (!supabase) return
+
     // Get initial session
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null)
@@ -47,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [supabase])
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -58,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -74,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signInWithGoogle = async () => {
+    if (!supabase) throw new Error('Supabase not configured')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -88,9 +102,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // Clear client state
-      await supabase.auth.signOut()
-      
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
+
       // Navigate to signout route (no fetch, extension-proof)
       window.location.href = '/auth/signout'
     } catch (error) {
