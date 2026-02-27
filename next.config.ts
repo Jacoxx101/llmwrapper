@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.openrouter.ai https://*.googleapis.com https://*.firebaseapp.com https://*.firebase.googleapis.com https://*.supabase.co wss: ws:; upgrade-insecure-requests;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://generativelanguage.googleapis.com https://api.moonshot.cn https://api.minimax.chat https://*.googleapis.com https://*.firebaseapp.com https://*.firebase.googleapis.com https://*.supabase.co wss: ws:; upgrade-insecure-requests;"
           },
           {
             key: 'X-Frame-Options',

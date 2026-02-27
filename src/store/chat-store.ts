@@ -39,9 +39,10 @@ interface ChatState {
 
   // Settings
   apiKey: string
-  openRouterApiKey: string
+  kimiApiKey: string
+  minimaxApiKey: string
   selectedModel: string
-  selectedProvider: 'gemini' | 'openrouter'
+  selectedProvider: 'gemini' | 'kimi' | 'minimax'
   isDarkMode: boolean
   isSidebarVisible: boolean
   isSidebarCollapsed: boolean
@@ -55,9 +56,10 @@ interface ChatState {
   deleteChat: (chatId: string) => void
   loadChat: (chatId: string) => void
   setApiKey: (key: string) => void
-  setOpenRouterApiKey: (key: string) => void
+  setKimiApiKey: (key: string) => void
+  setMinimaxApiKey: (key: string) => void
   setSelectedModel: (model: string) => void
-  setSelectedProvider: (provider: 'gemini' | 'openrouter') => void
+  setSelectedProvider: (provider: 'gemini' | 'kimi' | 'minimax') => void
   toggleTheme: () => void
   toggleSidebar: () => void
   toggleSidebarSize: () => void
@@ -74,7 +76,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   chats: [],
   attachedFiles: [],
   apiKey: '',
-  openRouterApiKey: '',
+  kimiApiKey: '',
+  minimaxApiKey: '',
   selectedModel: 'gemini-2.0-flash-exp',
   selectedProvider: 'gemini',
   isDarkMode: false,
@@ -194,7 +197,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setApiKey: (key) => set({ apiKey: key }),
 
-  setOpenRouterApiKey: (key) => set({ openRouterApiKey: key }),
+  setKimiApiKey: (key) => set({ kimiApiKey: key }),
+
+  setMinimaxApiKey: (key) => set({ minimaxApiKey: key }),
 
   setSelectedModel: (model) => set({ selectedModel: model }),
 

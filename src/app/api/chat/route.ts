@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, model, apiKey } = await request.json()
+    const { message, model } = await request.json()
+
+    const apiKey = process.env.GEMINI_API_KEY
 
     if (!message || !model || !apiKey) {
       return NextResponse.json(

@@ -60,8 +60,6 @@ export default function Home() {
     isLoading,
     chats,
     attachedFiles: storedFiles,
-    apiKey,
-    openRouterApiKey,
     selectedModel,
     selectedProvider,
     isDarkMode,
@@ -74,8 +72,6 @@ export default function Home() {
     updateChatTitle,
     deleteChat,
     loadChat,
-    setApiKey,
-    setOpenRouterApiKey,
     setSelectedModel,
     setSelectedProvider,
     toggleTheme,
@@ -91,11 +87,7 @@ export default function Home() {
   const { theme, setTheme } = useTheme()
   const [inputMessage, setInputMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showApiModal, setShowApiModal] = useState(false)
-  const [showOpenRouterModal, setShowOpenRouterModal] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [tempApiKey, setTempApiKey] = useState('')
-  const [tempOpenRouterApiKey, setTempOpenRouterApiKey] = useState('')
   const [showChatMenu, setShowChatMenu] = useState<string | null>(null)
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
@@ -116,18 +108,14 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Initialize API keys from store
-  useEffect(() => {
-    setTempApiKey(apiKey)
-    setTempOpenRouterApiKey(openRouterApiKey)
-  }, [apiKey, openRouterApiKey])
-
   // Update model when provider changes
   useEffect(() => {
     if (selectedProvider === 'gemini' && !selectedModel.startsWith('gemini')) {
       setSelectedModel('gemini-2.0-flash-exp')
-    } else if (selectedProvider === 'openrouter' && !selectedModel.includes('/')) {
-      setSelectedModel('openai/gpt-4o')
+    } else if (selectedProvider === 'kimi' && !selectedModel.startsWith('kimi')) {
+      setSelectedModel('kimi-k2.5')
+    } else if (selectedProvider === 'minimax' && !selectedModel.startsWith('minimax')) {
+      setSelectedModel('minimax-text-01')
     }
   }, [selectedProvider, selectedModel, setSelectedModel])
 
@@ -138,15 +126,6 @@ export default function Home() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputMessage.trim() || isLoading) return
-
-    if (selectedProvider === 'gemini' && !apiKey) {
-      alert('Please configure your Gemini API key first')
-      return
-    }
-    if (selectedProvider === 'openrouter' && !openRouterApiKey) {
-      alert('Please configure your OpenRouter API key first')
-      return
-    }
 
     const userMessage = inputMessage.trim()
     setInputMessage('')
@@ -164,13 +143,19 @@ export default function Home() {
         response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMessage, model: selectedModel, apiKey }),
+          body: JSON.stringify({ message: userMessage, model: selectedModel }),
         })
-      } else {
-        response = await fetch('/api/chat/openrouter', {
+      } else if (selectedProvider === 'kimi') {
+        response = await fetch('/api/chat/kimi', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMessage, model: selectedModel, apiKey: openRouterApiKey }),
+          body: JSON.stringify({ message: userMessage, model: selectedModel }),
+        })
+      } else {
+        response = await fetch('/api/chat/minimax', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage, model: selectedModel }),
         })
       }
 
@@ -221,9 +206,6 @@ export default function Home() {
     return groupChatsByTime(filteredChats)
   }, [filteredChats, isMounted])
 
-  const handleSaveApiKey = () => { setApiKey(tempApiKey); setShowApiModal(false) }
-  const handleSaveOpenRouterApiKey = () => { setOpenRouterApiKey(tempOpenRouterApiKey); setShowOpenRouterModal(false) }
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -248,6 +230,14 @@ export default function Home() {
   // File handling
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return
+    
+    // Check if file is an image - only Gemini supports image input
+    const isImage = files[0].type.startsWith('image/')
+    if (isImage && selectedProvider !== 'gemini') {
+      alert('Image upload is not supported with this model. Please switch to Gemini to use image input.')
+      return
+    }
+    
     const firstFile = files[0]
     setUploadedFiles(prev => {
       const exists = prev.some(f => f.name === firstFile.name && f.size === firstFile.size)
@@ -300,15 +290,9 @@ export default function Home() {
   const userInitial = (userName || userEmail || 'U')[0].toUpperCase()
 
   // ─── Input disabled check ─────────────────
-  const inputDisabled =
-    (selectedProvider === 'gemini' && !apiKey) ||
-    (selectedProvider === 'openrouter' && !openRouterApiKey) ||
-    isLoading
+  const inputDisabled = isLoading
 
-  const inputPlaceholder =
-    (selectedProvider === 'gemini' && apiKey) || (selectedProvider === 'openrouter' && openRouterApiKey)
-      ? 'Ask me anything...'
-      : `Configure ${selectedProvider === 'gemini' ? 'Gemini' : 'OpenRouter'} API key first`
+  const inputPlaceholder = 'Ask me anything...'
 
   // ─── Render shared input bar ───────────────
   const renderInputBar = (isHome: boolean) => (
@@ -346,21 +330,10 @@ export default function Home() {
           />
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowApiModal(true)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              title="Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-
             <Button
               type="submit"
               disabled={
                 (!inputMessage.trim() && uploadedFiles.length === 0) ||
-                (selectedProvider === 'gemini' && !apiKey) ||
-                (selectedProvider === 'openrouter' && !openRouterApiKey) ||
                 isLoading
               }
               className="h-[34px] w-[34px] p-0 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30"
@@ -377,73 +350,6 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-background text-foreground">
-      {/* Gemini API Key Modal */}
-      <Dialog open={showApiModal} onOpenChange={setShowApiModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>API Configuration</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="apiKey">Gemini API Key</Label>
-              <Input
-                id="apiKey"
-                type="password"
-                value={tempApiKey}
-                onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="Enter your API key"
-                className="mt-1"
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                Get your API key from{' '}
-                <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  Google AI Studio
-                </a>
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowApiModal(false)}>Cancel</Button>
-              <Button onClick={handleSaveApiKey}>Save</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* OpenRouter API Key Modal */}
-      <Dialog open={showOpenRouterModal} onOpenChange={setShowOpenRouterModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>OpenRouter API Configuration</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="openRouterApiKey">OpenRouter API Key</Label>
-              <Input
-                id="openRouterApiKey"
-                type="password"
-                value={tempOpenRouterApiKey}
-                onChange={(e) => setTempOpenRouterApiKey(e.target.value)}
-                placeholder="Enter your OpenRouter API key"
-                className="mt-1"
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                Get your API key from{' '}
-                <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  OpenRouter
-                </a>
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Supports: ChatGPT, Claude, DeepSeek, Kimi K2, and more
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowOpenRouterModal(false)}>Cancel</Button>
-              <Button onClick={handleSaveOpenRouterApiKey}>Save</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* ═══════════════ SIDEBAR ═══════════════ */}
       <aside className={`bg-sidebar border-r border-border transition-all duration-300 ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'} ${isSidebarCollapsed ? 'w-16' : 'w-[260px]'} fixed md:relative h-full z-50 flex flex-col`}>
 
@@ -618,25 +524,6 @@ export default function Home() {
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5">
               <ThemeToggle />
-              <Button
-                variant={apiKey ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowApiModal(true)}
-                className="h-[32px] text-xs rounded-lg shadow-sm"
-              >
-                <Key className="h-3.5 w-3.5 mr-1" />
-                {apiKey ? '✓' : 'Gemini'}
-              </Button>
-
-              <Button
-                variant={openRouterApiKey ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowOpenRouterModal(true)}
-                className="h-[32px] text-xs rounded-lg shadow-sm"
-              >
-                <Key className="h-3.5 w-3.5 mr-1" />
-                {openRouterApiKey ? '✓' : 'Router'}
-              </Button>
             </div>
           </div>
         </header>
