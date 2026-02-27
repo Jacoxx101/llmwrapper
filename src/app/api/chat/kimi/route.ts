@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     const { message, model } = await request.json()
 
-    const apiKey = process.env.KIMI_API_KEY
+    const apiKey = process.env.MOONSHOT_API_KEY
 
     if (!message || !model || !apiKey) {
       return NextResponse.json(

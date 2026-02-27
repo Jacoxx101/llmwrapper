@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
     const { message, model } = await request.json()
 
     const apiKey = process.env.MINIMAX_API_KEY
+    const groupId = process.env.MINIMAX_GROUP_ID
 
     if (!message || !model || !apiKey) {
       return NextResponse.json(
@@ -51,6 +52,7 @@ Always be helpful and match the level of formality to the question. Simple quest
         ],
         temperature: 0.7,
         max_tokens: 1024,
+        ...(groupId && { group_id: groupId }),
       }),
     })
 
