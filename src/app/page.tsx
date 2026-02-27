@@ -15,8 +15,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { useTheme } from 'next-themes'
 import {
   MessageSquare, Menu, Plus, Search, MoreVertical, Settings, X, Key,
-  Upload, File as FileIcon, Image as ImageIcon, LogOut, User,
-  Compass, BookOpen, FolderOpen, Clock, Sparkles, Paperclip, RotateCcw,
+  Upload, LogOut, User,
+  Compass, BookOpen, FolderOpen, Clock, Sparkles, RotateCcw,
   Zap, CheckCircle, MoreHorizontal, Link2, Download, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -89,12 +89,10 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showChatMenu, setShowChatMenu] = useState<string | null>(null)
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const isUploadingRef = useRef(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isHomePage = messages.length === 0
 
@@ -227,62 +225,7 @@ export default function Home() {
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
   }
 
-  // File handling
-  const handleFileUpload = (files: FileList | null) => {
-    if (!files || files.length === 0) return
-    
-    // Check if file is an image - only Gemini supports image input
-    const isImage = files[0].type.startsWith('image/')
-    if (isImage && selectedProvider !== 'gemini') {
-      alert('Image upload is not supported with this model. Please switch to Gemini to use image input.')
-      return
-    }
-    
-    const firstFile = files[0]
-    setUploadedFiles(prev => {
-      const exists = prev.some(f => f.name === firstFile.name && f.size === firstFile.size)
-      if (exists) return prev
-      return [...prev, firstFile]
-    })
-    // Read file and persist to store for Library/Files views
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const dataUrl = firstFile.type.startsWith('image/') ? (e.target?.result as string) : undefined
-      const af: AttachedFile = {
-        id: `file_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-        name: firstFile.name,
-        size: firstFile.size,
-        type: firstFile.type,
-        chatId: currentChatId,
-        attachedAt: new Date(),
-        dataUrl,
-      }
-      addAttachedFile(af)
-    }
-    if (firstFile.type.startsWith('image/')) {
-      reader.readAsDataURL(firstFile)
-    } else {
-      reader.readAsText(firstFile)
-    }
-  }
-
-  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }
-  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false) }
-  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); handleFileUpload(e.dataTransfer.files) }
-  const removeFile = (index: number) => { setUploadedFiles(prev => prev.filter((_, i) => i !== index)) }
-
-  const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />
-    return <FileIcon className="h-4 w-4" />
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  // Removed file upload handling - text-only models
 
   // Get user display name
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || 'User'
@@ -298,24 +241,6 @@ export default function Home() {
   const renderInputBar = (isHome: boolean) => (
     <div className={isHome ? 'home-input-bar' : 'flex items-center gap-2.5 bg-card border border-border rounded-[14px] px-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.04)] transition-all duration-200 focus-within:border-[var(--gold-accent)] focus-within:shadow-[0_0_0_3px_var(--gold-accent-light),0_4px_16px_rgba(0,0,0,0.08)]'}>
       <div className="flex items-center gap-2.5 w-full">
-        {/* File Upload */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple={false}
-          className="hidden"
-          onChange={(e) => { if (e.target.files && e.target.files.length > 0) { handleFileUpload(e.target.files); e.target.value = '' } }}
-          accept="*/*"
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex-shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-          title="Attach file"
-        >
-          <Paperclip className="h-4 w-4" />
-        </button>
-
         <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
           <Textarea
             ref={inputRef}
@@ -333,7 +258,7 @@ export default function Home() {
             <Button
               type="submit"
               disabled={
-                (!inputMessage.trim() && uploadedFiles.length === 0) ||
+                !inputMessage.trim() ||
                 isLoading
               }
               className="h-[34px] w-[34px] p-0 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-30"
@@ -563,28 +488,6 @@ export default function Home() {
                     <h1 className="greeting-bold mb-10">How can I assist you today?</h1>
 
                     <div className="w-full max-w-[600px] mb-8">
-                      {uploadedFiles.length > 0 && (
-                        <div className="mb-3 p-3 bg-card rounded-xl border border-border">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <FileIcon className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm font-medium">{uploadedFiles.length} files attached</span>
-                            </div>
-                            <button onClick={() => setUploadedFiles([])} className="p-1 rounded hover:bg-accent"><X className="h-3 w-3" /></button>
-                          </div>
-                          <div className="space-y-1">
-                            {uploadedFiles.map((file, i) => (
-                              <div key={i} className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2 truncate">
-                                  {getFileIcon(file)}
-                                  <span className="truncate">{file.name}</span>
-                                </div>
-                                <button onClick={() => removeFile(i)} className="p-1"><X className="h-3 w-3" /></button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                       {renderInputBar(true)}
                     </div>
 
@@ -605,15 +508,15 @@ export default function Home() {
                   </div>
                 ) : (
                   /* ── CHAT VIEW ── */
-                  <div className="max-w-[720px] mx-auto px-4 pt-4 pb-24">
+                  <div className="flex-1 overflow-y-auto">
                     {messages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground mt-24">
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                         <Sparkles className="h-12 w-12 mb-4 opacity-10" />
                         <p className="text-sm">Start a new conversation</p>
                       </div>
                     ) : (
                       <>
-                        <div className="space-y-6">
+                        <div className="space-y-2 pb-24">
                           {messages.map((m) => (
                             <ChatMessage key={m.id} {...m} />
                           ))}
@@ -631,17 +534,7 @@ export default function Home() {
           {/* ═══════════════ CHAT INPUT BAR (Bottom, only in chat view) ═══════════════ */}
           {activeView === 'chat' && (
             <div className="bg-background/85 backdrop-blur-lg border-t border-border p-4 absolute bottom-0 left-0 right-0">
-              <div className="max-w-[720px] mx-auto">
-                {uploadedFiles.length > 0 && (
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {uploadedFiles.map((f, i) => (
-                      <div key={i} className="bg-accent px-2 py-1 rounded text-[10px] flex items-center gap-1">
-                        <span className="truncate max-w-[100px]">{f.name}</span>
-                        <X className="h-2.5 w-2.5 cursor-pointer" onClick={() => removeFile(i)} />
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="max-w-[800px] mx-auto">
                 {renderInputBar(false)}
               </div>
             </div>
