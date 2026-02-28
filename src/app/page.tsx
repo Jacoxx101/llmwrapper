@@ -516,7 +516,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <>
-                        <div className="space-y-2 pb-24">
+                        <div className="pb-24 pt-4">
                           {messages.map((m) => (
                             <ChatMessage key={m.id} {...m} />
                           ))}

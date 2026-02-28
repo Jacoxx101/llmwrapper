@@ -25,12 +25,9 @@ export default function ChatMessage({ role, content, modelName, timestamp }: Mes
   }
 
   return (
-    <div className={clsx(
-      "flex w-full py-3 px-4",
-      isAssistant ? "justify-start" : "justify-end"
-    )}>
+    <div className="flex w-full py-2">
       <div className={clsx(
-        "max-w-[85%] rounded-2xl px-4 py-3",
+        "max-w-[75%] mx-auto rounded-2xl px-5 py-3",
         isAssistant 
           ? "bg-muted/50" 
           : "bg-primary text-primary-foreground"
