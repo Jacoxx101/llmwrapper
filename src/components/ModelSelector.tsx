@@ -9,7 +9,7 @@ export interface ModelOption {
     label: string
     description: string
     category: string
-    provider: 'gemini' | 'kimi' | 'minimax'
+    provider: 'gemini' | 'kimi' | 'minimax' | 'lmstudio'
 }
 
 export const ALL_MODELS: ModelOption[] = [
@@ -24,27 +24,34 @@ export const ALL_MODELS: ModelOption[] = [
 
     // ─── MINIMAX ───
     { value: 'minimax-text-01', label: 'MiniMax Text 01', description: 'Latest MiniMax text model', category: 'MINIMAX', provider: 'minimax' },
+
+    // ─── LM STUDIO (local) ───
+    { value: 'qwen3.5-9b-mlx', label: 'Qwen 3.5 9B MLX', description: 'Local model via LM Studio', category: 'LM STUDIO', provider: 'lmstudio' },
+    { value: 'llama-3.2-3b-instruct', label: 'Llama 3.2 3B', description: 'Local model via LM Studio', category: 'LM STUDIO', provider: 'lmstudio' },
+    { value: 'mistral-7b-instruct-v0.2', label: 'Mistral 7B Instruct', description: 'Local model via LM Studio', category: 'LM STUDIO', provider: 'lmstudio' },
 ]
 
-const CATEGORY_ORDER = ['GOOGLE', 'KIMI', 'MINIMAX']
+const CATEGORY_ORDER = ['GOOGLE', 'KIMI', 'MINIMAX', 'LM STUDIO']
 
 interface ModelSelectorProps {
     selectedModel: string
-    selectedProvider: 'gemini' | 'kimi' | 'minimax'
+    selectedProvider: 'gemini' | 'kimi' | 'minimax' | 'lmstudio'
     onModelChange: (model: string) => void
-    onProviderChange: (provider: 'gemini' | 'kimi' | 'minimax') => void
+    onProviderChange: (provider: 'gemini' | 'kimi' | 'minimax' | 'lmstudio') => void
 }
 
 const PROVIDER_LABELS: Record<string, string> = {
     gemini: 'G',
     kimi: 'K',
     minimax: 'M',
+    lmstudio: 'L',
 }
 
 const PROVIDER_COLORS: Record<string, string> = {
     gemini: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
     kimi: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     minimax: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    lmstudio: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
 }
 
 export default function ModelSelector({

@@ -114,6 +114,8 @@ export default function Home() {
       setSelectedModel('kimi-k2.5')
     } else if (selectedProvider === 'minimax' && !selectedModel.startsWith('minimax')) {
       setSelectedModel('minimax-text-01')
+    } else if (selectedProvider === 'lmstudio' && !['qwen3.5-9b-mlx', 'llama-3.2-3b-instruct', 'mistral-7b-instruct-v0.2'].includes(selectedModel)) {
+      setSelectedModel('qwen3.5-9b-mlx')
     }
   }, [selectedProvider, selectedModel, setSelectedModel])
 
@@ -145,6 +147,12 @@ export default function Home() {
         })
       } else if (selectedProvider === 'kimi') {
         response = await fetch('/api/chat/kimi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage, model: selectedModel }),
+        })
+      } else if (selectedProvider === 'lmstudio') {
+        response = await fetch('/api/chat/lmstudio', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: userMessage, model: selectedModel }),

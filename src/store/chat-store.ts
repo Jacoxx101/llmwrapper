@@ -42,7 +42,7 @@ interface ChatState {
   kimiApiKey: string
   minimaxApiKey: string
   selectedModel: string
-  selectedProvider: 'gemini' | 'kimi' | 'minimax'
+  selectedProvider: 'gemini' | 'kimi' | 'minimax' | 'lmstudio'
   isDarkMode: boolean
   isSidebarVisible: boolean
   isSidebarCollapsed: boolean
@@ -59,7 +59,7 @@ interface ChatState {
   setKimiApiKey: (key: string) => void
   setMinimaxApiKey: (key: string) => void
   setSelectedModel: (model: string) => void
-  setSelectedProvider: (provider: 'gemini' | 'kimi' | 'minimax') => void
+  setSelectedProvider: (provider: 'gemini' | 'kimi' | 'minimax' | 'lmstudio') => void
   toggleTheme: () => void
   toggleSidebar: () => void
   toggleSidebarSize: () => void
